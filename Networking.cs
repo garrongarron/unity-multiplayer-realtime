@@ -54,5 +54,11 @@ public class Networking : MonoBehaviour
             }
         }
     }
+    
+    private void OnApplicationQuit()
+    {
+        client.Close();
+    }
+
 
 }
