@@ -1,35 +1,38 @@
 //Networking.cs
-using System.Net.Sockets;//Libreria que nos permite usar Sockets
-using UnityEngine;
-using System;//Lo necesitamos para usar las interfaces Action
-using System.Text;//Lo necesitamos para decodificar los bytes provenientes del servidor
 
+//related link 
+//https://www.youtube.com/watch?v=xx5Xyxrq5Bc
+//https://www.youtube.com/watch?v=WwI_tDqKS8Y
+//https://forum.unity.com/threads/writing-and-reading-a-socket-with-tcp.282071/
+
+using System.Net.Sockets;   //library to use Sockets
+using UnityEngine;
+using System;               //to use Action (callbacks)
+using System.Text;          //to decode bytes from server
 
 public class Networking : MonoBehaviour
 {
-    TcpClient client = new TcpClient();//Instancia de nuestro client TCP
-    NetworkStream stream;//Lo usamos para leer y escribir en el servidor
+    TcpClient client = new TcpClient();
+    NetworkStream stream;   //to read and write
 
-    const string IP = "192.168.1.40";//Direccion IP del servidor(al principio sera la ip de tu pc)
-    const int PORT = 3000;//Puerto en el cual esta running el servidor
-    const double memory = 5e+6;//Significa 5mbs en bytes
-    const int timeTryingConnect = 5000;//Tiempo limite de conexion en milisegundos
-    public byte[] data = new byte[(int)memory];//Donde almacenamos lo que viene del servidor
-    public bool running = false;//Para saber si el client esta running
+    const string IP = "192.168.1.40";           //server ip (To be changed)
+    const int PORT = 3000;                      //port (To be changed)
+    const double memory = 5e+6;                 //means 5mbs en bytes
+    const int timeTryingConnect = 5000;         //time to connect
+    public byte[] data = new byte[(int)memory]; //where we store data from server
+
     private void Start()
     {
-        //Intentamos conectarnos al servidor
         conectar((bool res) =>
         {
             if (res == true)
             {
-                Debug.Log("OK");
-                stream = client.GetStream();//Obtenemos la instancia del stream de la conexion
-                running = true;
+                stream = client.GetStream();//getting stream instance
+                Debug.Log("ok");
             }
             else
             {
-                Debug.Log("NO SE PUDO CONECTAR");
+                Debug.Log("Connection Fail");
             }
         });
     }
@@ -40,25 +43,31 @@ public class Networking : MonoBehaviour
         callback(result);
     }
 
-
     private void Update()
     {
-
-        if (running == true)
+        if (stream.DataAvailable)
         {
-            if (stream.DataAvailable)//Asi sabemos si el servidor ha enviado algo
-            {
-                int n = stream.Read(data, 0, data.Length);
-                string message = Encoding.UTF8.GetString(data, 0, n);
-                Debug.Log(message);
-            }
+            receiveMsg();
         }
     }
-    
-    private void OnApplicationQuit()
+
+    void receiveMsg()
     {
-        client.Close();
+        int size = stream.Read(data, 0, data.Length);
+        string message = Encoding.UTF8.GetString(data, 0, size);
+        Debug.Log(message);
     }
 
+    void sendMsg(string msg)
+    {
+        Byte[] sendBytes = Encoding.UTF8.GetBytes(msg);
+        stream.Write(sendBytes, 0, sendBytes.Length);
+    }
+
+    private void OnApplicationQuit()
+    {
+        sendMsg("Closing (Message from CLIENT)");
+        client.Close();
+    }
 
 }
