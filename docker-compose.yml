@@ -1,0 +1,18 @@
+ 
+version: "2"
+
+services:
+  node:
+    build: .
+    image: node_with_dependencies:1.0
+    container_name: node
+    working_dir: /usr/src/app
+    environment:
+        - NODE_ENV=development #development #production
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    command: bash -c "node server.js"
+ 
